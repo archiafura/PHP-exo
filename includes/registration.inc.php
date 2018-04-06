@@ -54,10 +54,12 @@ if (isset($_POST['frmRegistration'])) {
      else {
          //mysqli_connect(adresse,utilisateur,mdp,base)
         $mdp = sha1($mdp);
+        $token = uniqid(sha1(date('Y-m-d|H:m:s')), false);
+
         $connection = mysqli_connect("localhost","archiafura","123","phpdieppe");
         $requete = "INSERT INTO T_USERS
-                (USERNAME, USERFIRSTNAME, USERMAIL, USERPASSWORD, ID_ROLE)
-                VALUES ('$nom', '$prenom', '$mail' , '$mdp' , 3)";
+                (USERNAME, USERFIRSTNAME, USERMAIL, USERPASSWORD, ID_ROLE, USERTOKEN)
+                VALUES ('$nom', '$prenom', '$mail' , '$mdp' , 3, '$token')";
 
         if(!$connection) {
             die("Erreur MySQL" . mysqli_connect_errno() . " | " . mysqli_connect_error());
@@ -66,6 +68,25 @@ if (isset($_POST['frmRegistration'])) {
         else {
             if (mysqli_query($connection, $requete) ){
                 echo "Données enregistrées";
+
+                $id = mysqli_insert_id($connection);
+                $messageMail = "<h1> Message envoyé ! </h1>";
+                $messageMail .= "<p>Vous êtes inscrit ! </p>";
+                $messageMail .= "<p> Mais vous devez valider votre inscription. </p>";
+                $messageMail .= "<p><a href='http://localhost/PHP-exo/index.php?page=mailValidation&amp;id=$id&amp;token=$token'>";
+                $messageMail .= "page=mailValidation'>Clique ici";
+                $messageMail .= "</a></p>";
+
+                
+                $headers = "From: macron@elysees.fr" . "\r\n".
+                            "Reply-to: edouard@matignon.com" . "\r\n".
+                            "X-Mailer: PHP/" . phpversion();
+
+                mail($mail, 'Inscription compte', $messageMail, $headers);
+
+
+
+
             }
             else {
                 echo "Erreur";
